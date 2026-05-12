@@ -148,6 +148,13 @@ export default function Wishes() {
           transition={{ duration: 1.4 }}
           className="text-center"
         >
+          <svg
+            aria-hidden="true"
+            className="mx-auto mb-6 block"
+            style={{ color: 'var(--gold)', width: '160px', height: '28px' }}
+          >
+            <use href="#floral-divider" />
+          </svg>
           <p className="section-eyebrow">Livre d'or</p>
           <h2 className="section-title mt-6">Laissez-nous un message</h2>
           <p className="section-sub mt-4">vos mots resteront gravés</p>

@@ -5,7 +5,19 @@ import { WEDDING } from '@/lib/wedding';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[100vh] flex items-center justify-center bg-beige px-6 py-20 md:py-28">
+    <section className="relative min-h-[100vh] flex items-center justify-center bg-beige px-6 py-20 md:py-28 overflow-hidden">
+      <svg className="classic-hero-corner tl" aria-hidden="true">
+        <use href="#floral-corner" />
+      </svg>
+      <svg className="classic-hero-corner tr" aria-hidden="true">
+        <use href="#floral-corner" />
+      </svg>
+      <svg className="classic-hero-corner bl" aria-hidden="true">
+        <use href="#floral-corner" />
+      </svg>
+      <svg className="classic-hero-corner br" aria-hidden="true">
+        <use href="#floral-corner" />
+      </svg>
       <div className="absolute inset-4 md:inset-8 border border-gold pointer-events-none classic-frame" />
 
       <motion.div

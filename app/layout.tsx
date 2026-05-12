@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Italiana } from 'next/font/google';
+import FloralSprite from '@/components/FloralSprite';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({
@@ -27,7 +28,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${cormorant.variable} ${italiana.variable}`}>
-      <body>{children}</body>
+      <body>
+        <FloralSprite />
+        {children}
+      </body>
     </html>
   );
 }

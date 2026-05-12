@@ -1,17 +1,24 @@
 -- =====================================================
--- Sophie & Thomas — Wedding site Supabase schema
+-- S.M.D. & C.A.C. — Wedding site Supabase schema
 -- Run this in the Supabase SQL editor
 -- =====================================================
 
--- RSVP table
+-- RSVP / Guests table
+-- attending: NULL = pending (not yet responded), TRUE = oui, FALSE = non
+-- responded_at: when the guest clicked oui/non (null while pending)
 create table if not exists public.rsvp (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  attending   boolean not null,
-  token       uuid not null default gen_random_uuid() unique,
-  arrived     boolean not null default false,
-  created_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  name          text not null,
+  attending     boolean null,
+  token         uuid not null default gen_random_uuid() unique,
+  arrived       boolean not null default false,
+  responded_at  timestamptz null,
+  created_at    timestamptz not null default now()
 );
+
+-- Migration for existing databases:
+alter table public.rsvp alter column attending drop not null;
+alter table public.rsvp add column if not exists responded_at timestamptz null;
 
 -- Wishes wall
 create table if not exists public.wishes (

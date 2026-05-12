@@ -1,92 +1,95 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { WEDDING } from '@/lib/wedding';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, type RsvpRow } from '@/lib/supabase';
 
-type Status = 'idle' | 'loading' | 'success' | 'error';
-type SuccessData = {
-  name: string;
-  attending: boolean;
-  token: string;
-  qrDataUrl?: string;
-};
+type Phase =
+  | { kind: 'loading' }
+  | { kind: 'invalid' }
+  | { kind: 'pending'; guest: RsvpRow }
+  | { kind: 'responded'; guest: RsvpRow; qrDataUrl?: string }
+  | { kind: 'error'; message: string };
 
-export default function Rsvp() {
-  const [name, setName] = useState('');
-  const [attending, setAttending] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [success, setSuccess] = useState<SuccessData | null>(null);
+export default function Rsvp({ token }: { token: string }) {
+  const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
+  const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || attending === null) {
-      setErrorMsg('Merci d’indiquer votre nom et votre choix.');
-      setStatus('error');
+  // Fetch the guest by token on mount
+  useEffect(() => {
+    if (!token) {
+      setPhase({ kind: 'invalid' });
       return;
     }
-    setStatus('loading');
-    setErrorMsg('');
+    if (!isSupabaseConfigured) {
+      setPhase({ kind: 'error', message: 'Supabase n’est pas configuré.' });
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('rsvp')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        setPhase({ kind: 'error', message: error.message });
+        return;
+      }
+      if (!data) {
+        setPhase({ kind: 'invalid' });
+        return;
+      }
+      const guest = data as RsvpRow;
+      if (guest.attending === null) {
+        setPhase({ kind: 'pending', guest });
+      } else {
+        const qrDataUrl = guest.attending ? await generateQr(guest.token) : undefined;
+        setPhase({ kind: 'responded', guest, qrDataUrl });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
+  async function respond(attending: boolean) {
+    const current =
+      phase.kind === 'pending' ? phase.guest : phase.kind === 'responded' ? phase.guest : null;
+    if (!current) return;
+    setSubmitting(true);
     try {
-      let token =
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2);
-
-      if (isSupabaseConfigured) {
-        const { data, error } = await supabase
-          .from('rsvp')
-          .insert({ name: name.trim(), attending })
-          .select('token')
-          .single();
-        if (error) throw error;
-        if (data?.token) token = data.token as string;
-      }
-
-      let qrDataUrl: string | undefined;
-      if (attending) {
-        const origin = typeof window !== 'undefined' ? window.location.origin : '';
-        const checkinUrl = `${origin}/checkin?token=${token}`;
-        try {
-          qrDataUrl = await QRCode.toDataURL(checkinUrl, {
-            margin: 2,
-            width: 480,
-            color: { dark: '#1A1714', light: '#F5EFE4' },
-          });
-        } catch {
-          // QR non-critical
-        }
-      }
-
-      setSuccess({ name: name.trim(), attending, token, qrDataUrl });
-      setStatus('success');
+      const { data, error } = await supabase
+        .from('rsvp')
+        .update({ attending, responded_at: new Date().toISOString() })
+        .eq('token', current.token)
+        .select('*')
+        .single();
+      if (error) throw error;
+      const guest = data as RsvpRow;
+      const qrDataUrl = guest.attending ? await generateQr(guest.token) : undefined;
+      setPhase({ kind: 'responded', guest, qrDataUrl });
+      setEditing(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Une erreur est survenue.';
-      setErrorMsg(`Désolés, l'envoi a échoué. ${msg}`);
-      setStatus('error');
+      setPhase({ kind: 'error', message: msg });
+    } finally {
+      setSubmitting(false);
     }
   }
 
   function downloadQr() {
-    if (!success?.qrDataUrl) return;
+    if (phase.kind !== 'responded' || !phase.qrDataUrl) return;
     const a = document.createElement('a');
-    a.href = success.qrDataUrl;
-    a.download = `qr-${success.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+    a.href = phase.qrDataUrl;
+    a.download = `qr-${phase.guest.name.replace(/\s+/g, '-').toLowerCase()}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }
-
-  function reset() {
-    setName('');
-    setAttending(null);
-    setSuccess(null);
-    setStatus('idle');
-    setErrorMsg('');
   }
 
   return (
@@ -99,6 +102,13 @@ export default function Rsvp() {
           transition={{ duration: 1.4 }}
           className="text-center"
         >
+          <svg
+            aria-hidden="true"
+            className="mx-auto mb-6 block"
+            style={{ color: 'var(--gold)', width: '160px', height: '28px' }}
+          >
+            <use href="#floral-divider" />
+          </svg>
           <p className="section-eyebrow">RSVP</p>
           <h2 className="section-title mt-6">Serez-vous des nôtres ?</h2>
           <p className="section-sub mt-4">
@@ -113,115 +123,65 @@ export default function Rsvp() {
           transition={{ duration: 1.2 }}
           className="mt-12 bg-beige-deep border border-gold-line p-8 md:p-12"
         >
-          {status === 'success' && success ? (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
-            >
+          {phase.kind === 'loading' && (
+            <p className="text-center serif-italic text-ink-soft">Chargement…</p>
+          )}
+
+          {phase.kind === 'invalid' && (
+            <div className="text-center">
               <p
-                className="font-display text-gold-deep"
-                style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', letterSpacing: '0.04em' }}
+                className="font-display text-ink"
+                style={{ fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '0.04em' }}
               >
-                {success.attending
-                  ? `Merci ${success.name} !`
-                  : `Merci ${success.name}`}
+                Ce lien n'est pas valide.
               </p>
-              <p className="serif-italic text-ink-soft mt-3">
-                {success.attending
-                  ? 'Nous avons hâte de vous voir.'
-                  : 'Nous sommes désolés de votre absence.'}
+              <p className="serif-italic text-ink-soft mt-4">
+                Veuillez contacter les mariés.
               </p>
+            </div>
+          )}
 
-              {success.attending && success.qrDataUrl && (
-                <div className="mt-10">
-                  <p
-                    className="font-display text-gold uppercase mb-4"
-                    style={{ fontSize: '10px', letterSpacing: '0.4em' }}
-                  >
-                    Votre QR code
-                  </p>
-                  <div className="inline-block p-4 border border-gold-line bg-beige-soft">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={success.qrDataUrl}
-                      alt="QR code de check-in"
-                      className="w-56 h-56 md:w-64 md:h-64"
-                    />
-                  </div>
-                  <p className="mt-4 text-sm serif-italic text-ink-soft">
-                    Présentez ce QR code à l'entrée le jour J.
-                  </p>
-                  <button onClick={downloadQr} className="btn-gold mt-6">
-                    Télécharger
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={reset}
-                className="block mx-auto mt-10 font-display uppercase text-ink-soft hover:text-gold transition"
-                style={{ fontSize: '10px', letterSpacing: '0.4em' }}
+          {phase.kind === 'error' && (
+            <div className="text-center">
+              <p
+                className="font-display text-ink"
+                style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', letterSpacing: '0.04em' }}
               >
-                Modifier ma réponse
-              </button>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <label
-                  htmlFor="rsvp-name"
-                  className="block font-display text-gold uppercase mb-2"
-                  style={{ fontSize: '11px', letterSpacing: '0.4em' }}
-                >
-                  Votre nom complet
-                </label>
-                <input
-                  id="rsvp-name"
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Camille Dubois"
-                />
-              </div>
+                Une erreur est survenue.
+              </p>
+              <p className="serif-italic mt-3" style={{ color: '#9B3D2C' }}>
+                {phase.message}
+              </p>
+            </div>
+          )}
 
-              <div>
-                <p
-                  className="font-display text-gold uppercase mb-3"
-                  style={{ fontSize: '11px', letterSpacing: '0.4em' }}
-                >
-                  Votre réponse
-                </p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <RadioOption
-                    label="Oui, je serai là"
-                    checked={attending === true}
-                    onChange={() => setAttending(true)}
-                  />
-                  <RadioOption
-                    label="Je ne pourrai pas venir"
-                    checked={attending === false}
-                    onChange={() => setAttending(false)}
-                  />
-                </div>
-              </div>
+          {phase.kind === 'pending' && (
+            <PendingForm
+              name={phase.guest.name}
+              submitting={submitting}
+              onYes={() => respond(true)}
+              onNo={() => respond(false)}
+            />
+          )}
 
-              {status === 'error' && errorMsg && (
-                <p className="text-sm serif-italic" style={{ color: '#9B3D2C' }}>
-                  {errorMsg}
-                </p>
-              )}
+          {phase.kind === 'responded' && editing && (
+            <PendingForm
+              name={phase.guest.name}
+              submitting={submitting}
+              currentAnswer={phase.guest.attending}
+              onYes={() => respond(true)}
+              onNo={() => respond(false)}
+              onCancel={() => setEditing(false)}
+            />
+          )}
 
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="btn-gold-filled w-full disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {status === 'loading' ? 'Envoi…' : 'Confirmer ma présence'}
-              </button>
-            </form>
+          {phase.kind === 'responded' && !editing && (
+            <RespondedView
+              guest={phase.guest}
+              qrDataUrl={phase.qrDataUrl}
+              onDownload={downloadQr}
+              onEdit={() => setEditing(true)}
+            />
           )}
         </motion.div>
       </div>
@@ -229,31 +189,178 @@ export default function Rsvp() {
   );
 }
 
-function RadioOption({
-  label,
-  checked,
-  onChange,
+async function generateQr(token: string): Promise<string | undefined> {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const checkinUrl = `${origin}/checkin?token=${token}`;
+  try {
+    return await QRCode.toDataURL(checkinUrl, {
+      margin: 2,
+      width: 480,
+      color: { dark: '#1A1714', light: '#F5EFE4' },
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+function PendingForm({
+  name,
+  submitting,
+  currentAnswer,
+  onYes,
+  onNo,
+  onCancel,
 }: {
-  label: string;
-  checked: boolean;
-  onChange: () => void;
+  name: string;
+  submitting: boolean;
+  currentAnswer?: boolean | null;
+  onYes: () => void;
+  onNo: () => void;
+  onCancel?: () => void;
+}) {
+  return (
+    <div className="text-center">
+      <p
+        className="font-display text-gold-deep"
+        style={{ fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '0.04em' }}
+      >
+        Bonjour {name}
+      </p>
+      <p className="serif-italic text-ink-soft mt-3">
+        {currentAnswer === undefined ? 'Serez-vous présent(e) ?' : 'Souhaitez-vous modifier votre réponse ?'}
+      </p>
+
+      <div className="grid sm:grid-cols-2 gap-4 mt-10">
+        <ChoiceButton
+          variant="yes"
+          highlighted={currentAnswer === true}
+          disabled={submitting}
+          onClick={onYes}
+        >
+          ✅ Oui, je serai là !
+        </ChoiceButton>
+        <ChoiceButton
+          variant="no"
+          highlighted={currentAnswer === false}
+          disabled={submitting}
+          onClick={onNo}
+        >
+          ❌ Je ne pourrai pas venir
+        </ChoiceButton>
+      </div>
+
+      {submitting && (
+        <p className="mt-6 serif-italic text-ink-soft text-sm">Enregistrement…</p>
+      )}
+
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          className="block mx-auto mt-8 font-display uppercase text-ink-soft hover:text-gold transition"
+          style={{ fontSize: '10px', letterSpacing: '0.4em' }}
+        >
+          Annuler
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ChoiceButton({
+  variant,
+  highlighted,
+  disabled,
+  onClick,
+  children,
+}: {
+  variant: 'yes' | 'no';
+  highlighted?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      onClick={onChange}
-      className={`text-left text-sm tracking-wide px-5 py-4 border transition-all duration-300 ${
-        checked
-          ? 'border-gold bg-gold/10 text-ink'
-          : 'border-gold-line text-ink-soft hover:border-gold hover:text-ink'
+      onClick={onClick}
+      disabled={disabled}
+      className={`font-display uppercase tracking-[0.2em] text-xs md:text-sm py-5 px-6 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed ${
+        variant === 'yes'
+          ? highlighted
+            ? 'bg-gold text-beige border border-gold'
+            : 'border border-gold text-gold hover:bg-gold hover:text-beige'
+          : highlighted
+          ? 'bg-ink text-beige border border-ink'
+          : 'border border-gold-line text-ink-soft hover:border-ink hover:text-ink'
       }`}
     >
-      <span
-        className={`inline-block w-2.5 h-2.5 mr-3 rounded-full border align-middle ${
-          checked ? 'bg-gold border-gold' : 'border-gold/60'
-        }`}
-      />
-      {label}
+      {children}
     </button>
+  );
+}
+
+function RespondedView({
+  guest,
+  qrDataUrl,
+  onDownload,
+  onEdit,
+}: {
+  guest: RsvpRow;
+  qrDataUrl?: string;
+  onDownload: () => void;
+  onEdit: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="text-center"
+    >
+      <p
+        className="font-display text-gold-deep"
+        style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', letterSpacing: '0.04em' }}
+      >
+        {guest.attending ? `Merci ${guest.name} !` : `Merci ${guest.name}`}
+      </p>
+      <p className="serif-italic text-ink-soft mt-3">
+        {guest.attending
+          ? 'Nous avons hâte de vous voir.'
+          : 'Nous sommes désolés de votre absence.'}
+      </p>
+
+      {guest.attending && qrDataUrl && (
+        <div className="mt-10">
+          <p
+            className="font-display text-gold uppercase mb-4"
+            style={{ fontSize: '10px', letterSpacing: '0.4em' }}
+          >
+            Votre QR code
+          </p>
+          <div className="inline-block p-4 border border-gold-line bg-beige-soft">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrDataUrl}
+              alt="QR code de check-in"
+              className="w-56 h-56 md:w-64 md:h-64"
+            />
+          </div>
+          <p className="mt-4 text-sm serif-italic text-ink-soft">
+            Présentez ce QR code à l'entrée le jour J.
+          </p>
+          <button onClick={onDownload} className="btn-gold mt-6">
+            Télécharger
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={onEdit}
+        className="block mx-auto mt-10 font-display uppercase text-ink-soft hover:text-gold transition"
+        style={{ fontSize: '10px', letterSpacing: '0.4em' }}
+      >
+        Modifier ma réponse
+      </button>
+    </motion.div>
   );
 }

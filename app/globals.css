@@ -7,11 +7,13 @@
   --beige-deep: #EAE0CC;
   --beige-soft: #FBF7EE;
   --ink: #1A1714;
+  --ink-deep: #0F0D0B;
   --ink-soft: #5C4A2E;
   --gold: #B8935A;
   --gold-light: #D4B675;
   --gold-deep: #8A6A2E;
   --gold-line: #E0CFA8;
+  --gold-faint: #C9B68A;
 }
 
 html {
@@ -362,3 +364,160 @@ textarea:focus {
 }
 .classic-frame::before { top: -12px; }
 .classic-frame::after { bottom: -12px; }
+
+/* Floral corner ornaments (Hero) */
+.classic-hero-corner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  color: var(--gold-deep);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+@media (min-width: 768px) {
+  .classic-hero-corner { width: 160px; height: 160px; }
+}
+.classic-hero-corner.tl { top: 32px; left: 32px; }
+.classic-hero-corner.tr { top: 32px; right: 32px; transform: scaleX(-1); }
+.classic-hero-corner.bl { bottom: 32px; left: 32px; transform: scaleY(-1); }
+.classic-hero-corner.br { bottom: 32px; right: 32px; transform: scale(-1, -1); }
+@media (min-width: 768px) {
+  .classic-hero-corner.tl,
+  .classic-hero-corner.tr { top: 44px; }
+  .classic-hero-corner.bl,
+  .classic-hero-corner.br { bottom: 44px; }
+  .classic-hero-corner.tl,
+  .classic-hero-corner.bl { left: 44px; }
+  .classic-hero-corner.tr,
+  .classic-hero-corner.br { right: 44px; }
+}
+
+/* Dark section: vertical gold gradient dividers top + bottom */
+.dark-section {
+  background: var(--ink-deep);
+  color: var(--beige);
+  position: relative;
+  overflow: hidden;
+}
+.dark-section::before,
+.dark-section::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, var(--gold-deep), transparent);
+  transform: translateX(-50%);
+}
+.dark-section::before { top: 0; }
+.dark-section::after { bottom: 0; }
+
+/* Section eyebrow / title / sub on dark background */
+.section-eyebrow-dark {
+  font-family: var(--font-italiana), 'Italiana', serif;
+  font-size: 11px;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.section-title-dark {
+  font-family: var(--font-italiana), 'Italiana', serif;
+  color: var(--beige);
+  letter-spacing: 0.03em;
+}
+.section-sub-dark {
+  font-style: italic;
+  color: var(--gold-faint);
+}
+
+/* Venue dark variant (matches design — softer black with horizontal gold rule) */
+.venue-dark {
+  background: var(--ink);
+  color: var(--beige);
+  position: relative;
+  overflow: hidden;
+}
+.venue-dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+}
+
+/* Large floral backdrops behind the venue card */
+.venue-floral-bg {
+  position: absolute;
+  color: #2A211A;
+  width: 280px;
+  height: 336px;
+  opacity: 1;
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .venue-floral-bg { width: 360px; height: 432px; }
+}
+.venue-floral-bg.l { left: -80px; bottom: -40px; transform: scaleX(-1); }
+.venue-floral-bg.r { right: -80px; top: -40px; transform: rotate(180deg); }
+
+/* Cream venue card on dark background */
+.venue-card {
+  position: relative;
+  z-index: 1;
+  background: var(--beige);
+  border: 1px solid var(--gold-deep);
+  color: var(--ink);
+}
+.venue-card-floral {
+  color: var(--gold);
+  width: 56px;
+  height: 67px;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+/* Countdown floral spray (centered above text) */
+.classic-section-floral {
+  color: var(--gold);
+  width: 80px;
+  height: 96px;
+  margin: 0 auto 28px;
+  display: block;
+  opacity: 0.95;
+}
+
+/* Footer floral divider */
+.classic-footer-floral {
+  color: var(--gold-deep);
+  width: 200px;
+  height: 34px;
+  display: block;
+  margin: 0 auto 28px;
+}
+
+/* Countdown cells (rule top/bottom) on dark */
+.countdown-cell-dark {
+  padding: 24px 8px;
+  border-top: 1px solid var(--gold-deep);
+  border-bottom: 1px solid var(--gold-deep);
+}
+@media (min-width: 768px) {
+  .countdown-cell-dark { padding: 32px 12px; }
+}
+.countdown-num-dark {
+  font-family: var(--font-italiana), 'Italiana', serif;
+  color: var(--beige);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.countdown-label-dark {
+  font-family: var(--font-italiana), 'Italiana', serif;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-top: 12px;
+}

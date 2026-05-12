@@ -36,42 +36,45 @@ export default function Countdown() {
   ];
 
   return (
-    <section id="countdown" className="bg-beige py-24 px-6 md:py-28">
+    <section id="countdown" className="dark-section py-24 px-6 md:py-32">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 1.4, ease: 'easeOut' }}
-        className="max-w-3xl mx-auto text-center"
+        className="relative max-w-3xl mx-auto text-center"
       >
-        <p className="section-eyebrow">Le compte à rebours</p>
-        <h2 className="section-title mt-6">Plus que quelques instants</h2>
-        <p className="section-sub mt-4">avant le grand jour</p>
+        <svg className="classic-section-floral" aria-hidden="true">
+          <use href="#floral-spray" />
+        </svg>
+
+        <p className="section-eyebrow-dark">Le compte à rebours</p>
+        <h2
+          className="section-title-dark mt-6"
+          style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}
+        >
+          Plus que quelques instants
+        </h2>
+        <p className="section-sub-dark mt-3 text-lg">avant le grand jour</p>
 
         <div className="grid grid-cols-4 gap-2 md:gap-6 max-w-2xl mx-auto mt-14">
           {units.map((u) => (
-            <div
-              key={u.label}
-              className="py-6 md:py-8 px-1 md:px-3 border-t border-b border-gold"
-            >
+            <div key={u.label} className="countdown-cell-dark">
               <div
-                className="font-display text-ink leading-none tabular-nums"
+                className="countdown-num-dark"
                 style={{ fontSize: 'clamp(32px, 5vw, 64px)' }}
               >
                 {mounted ? String(u.value).padStart(2, '0') : '--'}
               </div>
-              <div
-                className="font-display text-gold uppercase mt-3"
-                style={{ fontSize: '10px', letterSpacing: '0.4em' }}
-              >
-                {u.label}
-              </div>
+              <div className="countdown-label-dark">{u.label}</div>
             </div>
           ))}
         </div>
 
         {time.done && (
-          <p className="mt-12 serif-italic text-2xl text-gold">Le grand jour est arrivé !</p>
+          <p className="mt-12 serif-italic text-2xl text-gold-light">
+            Le grand jour est arrivé !
+          </p>
         )}
       </motion.div>
     </section>

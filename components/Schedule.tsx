@@ -14,6 +14,13 @@ export default function Schedule() {
           transition={{ duration: 1.4 }}
           className="text-center"
         >
+          <svg
+            aria-hidden="true"
+            className="mx-auto mb-6 block"
+            style={{ color: 'var(--gold)', width: '160px', height: '28px' }}
+          >
+            <use href="#floral-divider" />
+          </svg>
           <p className="section-eyebrow">Programme</p>
           <h2 className="section-title mt-6">Le grand jour</h2>
           <p className="section-sub mt-4">heure par heure</p>

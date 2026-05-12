@@ -13,9 +13,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export type RsvpRow = {
   id: string;
   name: string;
-  attending: boolean;
+  // null while pending (guest added but hasn't responded yet)
+  attending: boolean | null;
   token: string;
   arrived: boolean;
+  responded_at: string | null;
   created_at: string;
 };
 
