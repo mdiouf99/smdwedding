@@ -1,6 +1,7 @@
 import EnvelopeIntro from '@/components/EnvelopeIntro';
 import Hero from '@/components/Hero';
 import Countdown from '@/components/Countdown';
+import Portrait from '@/components/Portrait';
 import Venue from '@/components/Venue';
 import Rsvp from '@/components/Rsvp';
 import Wishes from '@/components/Wishes';
@@ -20,6 +21,7 @@ export default function Home({
       <main>
         <Hero />
         <Countdown />
+        <Portrait />
         <Venue />
         {token ? <Rsvp token={token} /> : <NoTokenNotice />}
         {token ? <Wishes /> : null}
