@@ -10,8 +10,8 @@ export const WEDDING = {
   dateLabel: 'Samedi 6 Juin 2026',
   dateRoman: '06 · VI · MMXXVI',
   dateRow: { day: '06', month: 'JUIN', year: '2026' },
-  timeLabel: '16 h 00',
-  receptionLabel: '18 h 30',
+  timeLabel: '19 h 00',
+  receptionLabel: '19 h 00',
   venue: 'Sacré Cœur 3',
   venueAddressLines: [
     'Sacré Cœur 3',
@@ -20,10 +20,11 @@ export const WEDDING = {
   ],
   venueCity: 'Dakar, Sénégal',
   rsvpDeadline: '1er mai 2026',
+  venueCoords: { lat: 14.720742, lng: -17.466423 },
   mapsLink:
-    'https://www.google.com/maps/dir/?api=1&destination=Sacr%C3%A9+Coeur+3+Dakar+S%C3%A9n%C3%A9gal',
+    'https://www.google.com/maps/dir/?api=1&destination=14.720742,-17.466423',
   mapsEmbed:
-    'https://www.google.com/maps?q=Sacr%C3%A9+Coeur+3,+Dakar,+S%C3%A9n%C3%A9gal&output=embed',
+    'https://www.google.com/maps?q=14.720742,-17.466423&z=17&output=embed',
 };
 
 export const SCHEDULE = [

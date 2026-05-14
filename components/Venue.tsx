@@ -54,34 +54,18 @@ export default function Venue() {
               {WEDDING.venueAddressLines[2]}
             </p>
 
-            <div className="grid grid-cols-2 gap-6 mt-10 pt-8 border-t border-gold-line">
-              <div>
-                <div
-                  className="font-display text-gold uppercase"
-                  style={{ fontSize: '10px', letterSpacing: '0.4em' }}
-                >
-                  Cérémonie
-                </div>
-                <div
-                  className="font-display text-ink mt-2"
-                  style={{ fontSize: '18px', letterSpacing: '0.05em' }}
-                >
-                  {WEDDING.timeLabel}
-                </div>
+            <div className="mt-10 pt-8 border-t border-gold-line text-center">
+              <div
+                className="font-display text-gold uppercase"
+                style={{ fontSize: '10px', letterSpacing: '0.4em' }}
+              >
+                Cérémonie
               </div>
-              <div>
-                <div
-                  className="font-display text-gold uppercase"
-                  style={{ fontSize: '10px', letterSpacing: '0.4em' }}
-                >
-                  Réception
-                </div>
-                <div
-                  className="font-display text-ink mt-2"
-                  style={{ fontSize: '18px', letterSpacing: '0.05em' }}
-                >
-                  {WEDDING.receptionLabel}
-                </div>
+              <div
+                className="font-display text-ink mt-2"
+                style={{ fontSize: '18px', letterSpacing: '0.05em' }}
+              >
+                {WEDDING.timeLabel}
               </div>
             </div>
 
