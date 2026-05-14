@@ -112,7 +112,7 @@ export default function Rsvp({ token }: { token: string }) {
           <p className="section-eyebrow">RSVP</p>
           <h2 className="section-title mt-6">Serez-vous des nôtres ?</h2>
           <p className="section-sub mt-4">
-            Merci de confirmer votre présence avant le {WEDDING.rsvpDeadline}.
+            Merci de confirmer votre présence.
           </p>
         </motion.div>
 

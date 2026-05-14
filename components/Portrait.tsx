@@ -4,21 +4,28 @@ import { motion } from 'framer-motion';
 
 export default function Portrait() {
   return (
-    <section className="bg-beige py-24 px-6 md:py-28">
-      <div className="max-w-3xl mx-auto text-center">
+    <section className="relative bg-beige py-24 px-6 md:py-28 overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/flowers/gold-line-bouquet.png"
+        alt=""
+        className="flower-corner tr"
+        aria-hidden="true"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/flowers/gold-line-bouquet.png"
+        alt=""
+        className="flower-corner bl"
+        aria-hidden="true"
+      />
+      <div className="relative max-w-3xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 1.4 }}
         >
-          <svg
-            aria-hidden="true"
-            className="mx-auto mb-8 block"
-            style={{ color: 'var(--gold)', width: '160px', height: '28px' }}
-          >
-            <use href="#floral-divider" />
-          </svg>
 
           <div className="relative inline-block">
             {/* gold double-frame */}
