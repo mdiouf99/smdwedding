@@ -1,8 +1,8 @@
 export const WEDDING = {
   // Initials only (per couple's preference)
-  bride: 'S',
+  bride: 'M',
   brideFull: 'S.M.D.',
-  groom: 'C',
+  groom: 'A',
   groomFull: 'C.A.C.',
   hashtag: '#SMDetCAC',
   // Saturday 6 juin 2026 — 16h Sénégal (UTC)
